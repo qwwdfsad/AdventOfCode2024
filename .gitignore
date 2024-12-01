@@ -1,0 +1,3 @@
+# Project exclude paths
+/build/
+/build/tasks/_AdventOfCode2024_compileJvm/
