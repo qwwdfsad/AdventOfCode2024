@@ -1,7 +1,7 @@
 use std::io::BufRead;
-use crate::day02::solve;
+use crate::day03::solve;
 
-mod day02;
+mod day03;
 
 fn read_lines(file: &str) -> Vec<String> {
     let file = std::fs::File::open("/Users/qwwdfsad/Desktop/aoc/".to_owned() + file).unwrap();
