@@ -13,6 +13,15 @@ fun main() {
     }.also { println(it) }
 }
 
+val dkeypad = mapOf(
+    '#' to Point(0, 0),
+    '^' to Point(1, 0),
+    'A' to Point(2, 0),
+    '<' to Point(0, 1),
+    'v' to Point(1, 1),
+    '>' to Point(2, 1),
+)
+
 private fun solve(code: String): Long {
     val keypad = buildMap {
         for (i in 0..2) {
@@ -25,30 +34,66 @@ private fun solve(code: String): Long {
         put('A', Point(2, 3))
     }
 
-    val dkeypad = mapOf(
-        '#' to Point(0, 0),
-        '^' to Point(1, 0),
-        'A' to Point(2, 0),
-        '<' to Point(0, 1),
-        'v' to Point(1, 1),
-        '>' to Point(2, 1),
-    )
+    return solveRec(keypad, code, 25) * code.substringBefore("A").toLong()
+}
 
-    // First layer
-    val result = solve(keypad, code)
-    var r = result
-    repeat(2) {
-        r = solve(dkeypad, r)
+val cache = HashMap<Pair<String, Int>, Long>()
+
+private fun solveRec(
+    keypad: Map<Char, Point>,
+    code: String, depth: Int,
+): Long {
+    var current = keypad.getValue('A')
+    var result = 0L
+    for (ch in code) {
+        val dest = keypad.getValue(ch)
+        val dx = dest.x - current.x
+        val dy = dest.y - current.y
+        // For the first keypad: for downwards movement we have dx precedence, otherwise dy
+        val horizontal = (if (dx > 0) ">" else "<").repeat(abs(dx))
+        val vertical = (if (dy > 0) "v" else "^").repeat(abs(dy))
+        val brick = keypad.getValue('#')
+
+        var subsequence: String
+        val hBrick = brick == Point(dest.x, current.y);
+        val vBrick = brick == Point(current.x, dest.y);
+        subsequence = if (hBrick) {
+            vertical + horizontal
+        } else if (vBrick) {
+            horizontal + vertical
+        } else {
+            // Precedence affects the final score
+            if (dx < 0) {
+                horizontal + vertical
+            } else {
+                vertical + horizontal
+            }
+        }
+        subsequence += 'A'
+        current = dest
+        val key = subsequence to depth
+        if (key in cache) {
+            result += cache.getValue(key)
+            continue
+        }
+
+        var interim: Long
+        if (depth == 0) {
+            interim = subsequence.length.toLong()
+        } else {
+            interim = solveRec(dkeypad, subsequence, depth - 1)
+        }
+        cache[key] = interim
+        result += interim
     }
-
-    println(r.length.toString() + "*" + code.substringBefore("A").toLong())
-    return r.length * code.substringBefore("A").toLong()
+    return result
 }
 
 // Part 1
 private fun solve(
     keypad: Map<Char, Point>,
-    code: String, ): String {
+    code: String,
+): String {
     var current = keypad.getValue('A')
     val result = StringBuilder()
     for (ch in code) {
